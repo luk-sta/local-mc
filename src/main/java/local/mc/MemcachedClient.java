@@ -1,10 +1,12 @@
 package local.mc;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 public class MemcachedClient implements MemcachedApi {
-    private final CacheMap cacheMap = new CacheMap();
+    private final CacheMap cacheMap;
+
+    public MemcachedClient(long maxSizeBytes) {
+        cacheMap = new CacheMap(maxSizeBytes);
+    }
+
     @Override
     public <T> T get(String key) {
         //TODO

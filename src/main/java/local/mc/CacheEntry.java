@@ -11,7 +11,7 @@ class CacheEntry {
         this.lastAccess = System.currentTimeMillis();
     }
 
-    boolean isInvalidated() {
-        return System.currentTimeMillis() - lastAccess > ttl;
+    boolean isLive() {
+        return System.currentTimeMillis() - lastAccess <= ttl;
     }
 }
