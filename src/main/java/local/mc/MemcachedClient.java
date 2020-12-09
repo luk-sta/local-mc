@@ -1,7 +1,10 @@
 package local.mc;
 
+import java.io.Serializable;
+import java.util.Map;
+
 public class MemcachedClient implements MemcachedApi {
-    private final CacheMap cacheMap;
+    private final Map<String, CacheEntry> cacheMap;
 
     public MemcachedClient(long maxSizeBytes) {
         cacheMap = new CacheMap(maxSizeBytes);
@@ -11,5 +14,10 @@ public class MemcachedClient implements MemcachedApi {
     public <T> T get(String key) {
         //TODO
         return null;
+    }
+
+    @Override
+    public void flushAll() {
+        cacheMap.clear();
     }
 }
