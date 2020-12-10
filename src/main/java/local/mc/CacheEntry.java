@@ -1,23 +1,28 @@
 package local.mc;
 
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 
-class CacheEntry {
+@Slf4j
+final class CacheEntry {
     private byte[] itemBytes;
-    private long ttl;
+    private long eolTime;
     private long cas;
-    private long lastAccess;
 
     CacheEntry(Serializable item) throws IOException {
         this.itemBytes = serialize(item);
-        this.ttl = 0;
+        this.eolTime = Long.MAX_VALUE;
         this.cas = 0;
-        this.lastAccess = System.currentTimeMillis();
     }
 
     private byte[] serialize(Serializable item) throws IOException {
@@ -35,7 +40,23 @@ class CacheEntry {
         return itemBytes.length;
     }
 
+    Serializable getItem() {
+        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(itemBytes);
+             BufferedInputStream bufferedInputStream = new BufferedInputStream(byteArrayInputStream);
+             InflaterInputStream inflaterInputStream = new InflaterInputStream(bufferedInputStream);
+             ObjectInputStream ois = new ObjectInputStream(inflaterInputStream)) {
+            return (Serializable) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            log.error(e.getMessage(), e);
+        }
+        return null;
+    }
+
     boolean isLive() {
-        return System.currentTimeMillis() - lastAccess <= ttl;
+        return System.currentTimeMillis() > eolTime;
+    }
+
+    boolean isInvalid() {
+        return System.currentTimeMillis() <= eolTime;
     }
 }

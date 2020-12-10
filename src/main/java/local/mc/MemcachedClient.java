@@ -11,9 +11,9 @@ public class MemcachedClient implements MemcachedApi {
     }
 
     @Override
-    public <T> T get(String key) {
-        //TODO
-        return null;
+    public Serializable get(String key) {
+        CacheEntry cacheEntry = cacheMap.get(key);
+        return (cacheEntry == null) ? null : cacheEntry.getItem();
     }
 
     @Override

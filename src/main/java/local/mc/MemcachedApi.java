@@ -1,7 +1,9 @@
 package local.mc;
 
+import java.io.Serializable;
+
 public interface MemcachedApi {
-    <T> T get(String key);
+    Serializable get(String key);
 
     void flushAll();
 }
