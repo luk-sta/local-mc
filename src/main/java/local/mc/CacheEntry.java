@@ -19,10 +19,11 @@ final class CacheEntry {
     private long eolTime;
     private long cas;
 
-    CacheEntry(Serializable item) throws IOException {
+
+    CacheEntry(Serializable item, long eolTime, long cas) throws IOException {
         this.itemBytes = serialize(item);
-        this.eolTime = Long.MAX_VALUE;
-        this.cas = 0;
+        this.eolTime = eolTime;
+        this.cas = cas;
     }
 
     private byte[] serialize(Serializable item) throws IOException {

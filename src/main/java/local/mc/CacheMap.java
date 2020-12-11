@@ -18,7 +18,7 @@ final class CacheMap extends LinkedHashMap<String, CacheEntry> {
     }
 
     @Override
-    public synchronized CacheEntry get(Object key) {
+    public CacheEntry get(Object key) {
         CacheEntry cacheEntry = super.get(key);
         if (cacheEntry == null) {
             return null;
@@ -31,7 +31,7 @@ final class CacheMap extends LinkedHashMap<String, CacheEntry> {
     }
 
     @Override
-    public synchronized CacheEntry put(String key, CacheEntry value) {
+    public CacheEntry put(String key, CacheEntry value) {
         CacheEntry old = super.put(key, value);
         long addedSize = getSize(key, value) - getSize(key, old);
         byteSize.addAndGet(addedSize);
