@@ -2,22 +2,20 @@ package local.mc;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class MemcachedClient implements MemcachedApi {
-    private final Map<String, CacheEntry> cacheMap;
+    private final Cache cache;
     private final Random random = new Random();
 
     public MemcachedClient(long maxSizeBytes) {
-        cacheMap = Collections.synchronizedMap(new CacheMap(maxSizeBytes));
+        cache = new Cache(maxSizeBytes);
     }
 
     @Override
     public Serializable get(String key) {
-        CacheEntry cacheEntry = cacheMap.get(key);
+        CacheEntry cacheEntry = cache.get(key);
         return (cacheEntry == null) ? null : cacheEntry.getItem();
     }
 
@@ -26,12 +24,12 @@ public class MemcachedClient implements MemcachedApi {
         long eolTime = (expirationSeconds > TimeUnit.DAYS.toSeconds(expirationSeconds)) ?
                 expirationSeconds * 1000L : System.currentTimeMillis() + expirationSeconds * 1000L;
         CacheEntry cacheEntry = new CacheEntry(o, eolTime, random.nextLong());
-        cacheMap.put(key, cacheEntry);
+        cache.put(key, cacheEntry);
         return true;
     }
 
     @Override
     public void flushAll() {
-        cacheMap.clear();
+        cache.clear();
     }
 }

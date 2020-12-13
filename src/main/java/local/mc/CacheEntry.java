@@ -1,7 +1,9 @@
 package local.mc;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -10,20 +12,24 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
+@Getter
 @Slf4j
 final class CacheEntry {
+    private static final long ENTRY_ADDITIONAL_BYTES = 3 * 8;
     private byte[] itemBytes;
-    private long eolTime;
+    private final AtomicLong eolTime;
     private long cas;
-
+    private final AtomicLong lastAccessed;
 
     CacheEntry(Serializable item, long eolTime, long cas) throws IOException {
         this.itemBytes = serialize(item);
-        this.eolTime = eolTime;
+        this.eolTime = new AtomicLong(eolTime);
         this.cas = cas;
+        this.lastAccessed = new AtomicLong(System.currentTimeMillis());
     }
 
     private byte[] serialize(Serializable item) throws IOException {
@@ -41,6 +47,13 @@ final class CacheEntry {
         return itemBytes.length;
     }
 
+    static long getSize(String key, @Nullable CacheEntry cacheEntry) {
+        if (cacheEntry == null) {
+            return 0;
+        }
+        return cacheEntry.getItemSize() + ENTRY_ADDITIONAL_BYTES + key.getBytes().length;
+    }
+
     Serializable getItem() {
         try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(itemBytes);
              BufferedInputStream bufferedInputStream = new BufferedInputStream(byteArrayInputStream);
@@ -53,11 +66,12 @@ final class CacheEntry {
         return null;
     }
 
-    boolean isLive() {
-        return System.currentTimeMillis() > eolTime;
-    }
 
     boolean isInvalid() {
-        return System.currentTimeMillis() <= eolTime;
+        return System.currentTimeMillis() <= eolTime.get();
+    }
+
+    void refreshLastAccessed() {
+        lastAccessed.set(System.currentTimeMillis());
     }
 }
