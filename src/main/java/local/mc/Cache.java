@@ -11,8 +11,9 @@ final class Cache {
     private final AtomicReference<Map<String, CacheEntry>> currentMapRef = new AtomicReference<>(new HashMap<>());
     private final long maxSize;
     private final long cleanThreshold;
-    private final AtomicLong totalSize = new AtomicLong();
+    private final AtomicLong totalSize = new AtomicLong(); // may not be completely accurate
     private final AtomicBoolean cleanRunning = new AtomicBoolean(false);
+    private final AtomicReference<Cleaner> cleanerRef = new AtomicReference<>();
 
     Cache(long maxSize) {
         this.maxSize = maxSize;
@@ -44,13 +45,21 @@ final class Cache {
         }
         if (totalSize.get() > cleanThreshold) {
             Cleaner cleaner = new Cleaner(oldMap, currentMapRef, maxSize, totalSize, cleanRunning);
+            cleanerRef.set(cleaner);
             cleaner.start();
         } else {
             cleanRunning.set(false);
         }
     }
 
-    public void clear() {
-        //TODO
+    public void clear() throws InterruptedException {
+        Cleaner cleaner = cleanerRef.get();
+        if (cleanRunning.get() && cleaner != null) {
+            cleaner.interrupt();
+            cleaner.join();
+        }
+        oldMap.get().clear();
+        currentMapRef.get().clear();
+        totalSize.set(0);
     }
 }

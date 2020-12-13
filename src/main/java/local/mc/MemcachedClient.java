@@ -29,7 +29,7 @@ public class MemcachedClient implements MemcachedApi {
     }
 
     @Override
-    public void flushAll() {
+    public void flushAll() throws InterruptedException {
         cache.clear();
     }
 }

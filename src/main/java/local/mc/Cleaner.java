@@ -54,6 +54,9 @@ public class Cleaner extends Thread {
     private void copy(Map<String, CacheEntry> oldMap, Map<String, CacheEntry> currentMap) {
         Iterator<Map.Entry<String, CacheEntry>> oldMapIterator = oldMap.entrySet().iterator();
         while (oldMapIterator.hasNext()) {
+            if (isInterrupted()) {
+                return;
+            }
             Map.Entry<String, CacheEntry> next = oldMapIterator.next();
             String key = next.getKey();
             CacheEntry value = next.getValue();
@@ -71,9 +74,15 @@ public class Cleaner extends Thread {
 
     private void removeLastAccessedEntries(Map<String, CacheEntry> oldMap) {
         List<Map.Entry<String, CacheEntry>> entryList = new ArrayList<>(oldMap.entrySet());
+        if (isInterrupted()) {
+            return;
+        }
         entryList.sort(comparingLong(e -> e.getValue().getLastAccessed().get()));
         Iterator<Map.Entry<String, CacheEntry>> entryIterator = entryList.iterator();
         while (totalSize.get() > maxSize) {
+            if (isInterrupted()) {
+                return;
+            }
             Map.Entry<String, CacheEntry> next = entryIterator.next();
             String key = next.getKey();
             CacheEntry value = next.getValue();
@@ -87,6 +96,9 @@ public class Cleaner extends Thread {
     private void removeInvalidEntries(Map<String, CacheEntry> oldMap) {
         Iterator<Map.Entry<String, CacheEntry>> oldMapIterator = oldMap.entrySet().iterator();
         while (oldMapIterator.hasNext()) {
+            if (isInterrupted()) {
+                return;
+            }
             Map.Entry<String, CacheEntry> next = oldMapIterator.next();
             if (next.getValue().isInvalid()) {
                 oldMapIterator.remove();

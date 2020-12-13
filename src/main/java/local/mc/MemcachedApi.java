@@ -8,5 +8,5 @@ public interface MemcachedApi {
 
     boolean set(String key, int expirationSeconds, Serializable o) throws IOException;
 
-    void flushAll();
+    void flushAll() throws InterruptedException;
 }
